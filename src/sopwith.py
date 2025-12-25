@@ -80,6 +80,14 @@ def update_player_coordinates(horizontal_speed, player_rect, screen, vertical_sp
 
     return player_rect
 
+def manage_bombs(bombs, screen) -> list[pygame.Rect]:
+    if len(bombs) > 0:
+        bomb_rect = bombs.pop(0)
+        new_bomb_rect = draw_bomb_update(bomb_rect, screen)
+        if new_bomb_rect.bottom < screen.get_height() - 50:
+            bombs.append(new_bomb_rect)
+    return bombs
+
 
 def main():
 
@@ -117,13 +125,8 @@ def main():
         # Draw the player
         player_rect = draw_player(horizontal_speed, player_image, player_rect, screen, vertical_speed)
 
-        if len(bombs) > 0:
-            bomb_rect = bombs.pop(0)
-            new_bomb_rect = draw_bomb_update(bomb_rect, screen)
-            if new_bomb_rect.bottom < screen.get_height() - 50:
-                bombs.append(new_bomb_rect)
-
-
+        # Draw bombs (if needed)
+        bombs = manage_bombs(bombs, screen)
 
         # Display the player coordinates
         display_coordination_text(screen, player_rect)
@@ -140,14 +143,11 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-
-
         # Update the display
         pygame.display.flip()
         clock.tick(60)
 
     pygame.quit()
-
 
 
 
