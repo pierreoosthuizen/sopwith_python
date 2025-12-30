@@ -1,7 +1,17 @@
 import pygame
 
 
+
+
 class SopwithGame:
+
+    FRAME_RATE = 60
+    GROUND_LEVEL = 37
+    HIGH_ALTITUDE = 350
+    MEDIUM_ALTITUDE = 150
+    MINIMUM_ALTITUDE = 50
+    MARGIN = 10
+
     def __init__(self):
         # Initialize pygame
         pygame.init()
@@ -18,7 +28,7 @@ class SopwithGame:
 
         # Create player rect
         self.player_rect = self.player_image.get_rect()
-        self.player_rect.left = self.screen.get_width() - self.player_rect.width - 10
+        self.player_rect.left = self.screen.get_width() - self.player_rect.width - self.MARGIN
         self.player_rect.top = 50
 
         # Game state variables
@@ -40,14 +50,20 @@ class SopwithGame:
         self.font_large = pygame.font.Font(None, 24)
         self.font_small = pygame.font.Font(None, 18)
 
+        # Colors for text display
+        self.white = pygame.Color(255, 255, 255)
+        self.orange = pygame.Color(255, 128, 0)
+        self.red = pygame.Color(255, 0, 0)
+        self.green = pygame.Color(0, 255, 0)
+
     def update_altitude(self):
         """Calculate current altitude based on player position"""
-        self.altitude = self.screen.get_height() - self.player_rect.bottom - 37
+        self.altitude = self.screen.get_height() - self.player_rect.bottom - self.GROUND_LEVEL
 
     def create_bomb(self) -> pygame.Rect:
         """Create a new bomb at the player's position"""
         bomb_rect = self.bomb_image.get_rect()
-        bomb_rect.top = self.player_rect.bottom - 8
+        bomb_rect.top = self.player_rect.bottom
         bomb_rect.midtop = self.player_rect.midbottom
         self.screen.blit(self.bomb_image, (bomb_rect.x, bomb_rect.y))
         return bomb_rect
@@ -65,7 +81,7 @@ class SopwithGame:
         if len(self.bombs) > 0:
             bomb_rect = self.bombs.pop(0)
             new_bomb_rect = self.draw_bomb_update(bomb_rect)
-            if new_bomb_rect.bottom < self.screen.get_height() - 50:
+            if new_bomb_rect.bottom < self.screen.get_height() - self.GROUND_LEVEL:
                 self.bombs.append(new_bomb_rect)
 
     def update_player_coordinates(self):
@@ -84,13 +100,7 @@ class SopwithGame:
     def display_hud(self):
         """Display game information (altitude, bombs, score)"""
         # Display altitude
-        altitude_text = self.font_small.render(
-            f'Altitude: {self.altitude} ft',
-            True, (255, 255, 255)
-        )
-        altitude_rect = altitude_text.get_rect()
-        altitude_rect.topleft = (10, 10)
-        self.screen.blit(altitude_text, altitude_rect)
+        self.display_altitude()
 
         # Display bombs dropped
         bombs_text = self.font_small.render(
@@ -109,6 +119,27 @@ class SopwithGame:
         score_rect = score_text.get_rect()
         score_rect.topleft = (650, 30)
         self.screen.blit(score_text, score_rect)
+
+    def display_altitude(self):
+
+        color = self.green
+        if self.altitude < self.HIGH_ALTITUDE and self.altitude >= self.MEDIUM_ALTITUDE:
+            color = self.orange
+        elif self.altitude < self.MEDIUM_ALTITUDE:
+            color = self.red
+
+        x_pos = 10
+        y_pos = 10
+
+        parts = [
+            (self.font_small.render('Altitude: ', True, self.white)),
+            (self.font_small.render(f'{self.altitude}', True, color)),
+            (self.font_small.render(' ft', True, self.white)),
+        ]
+
+        for text_surface in parts:
+            self.screen.blit(text_surface, (x_pos, y_pos))
+            x_pos += text_surface.get_width()  # Move to the right
 
     def handle_events(self):
         """Process game events"""
@@ -137,6 +168,9 @@ class SopwithGame:
             # Draw bombs (if needed)
             self.manage_bombs()
 
+        if self.altitude < self.MINIMUM_ALTITUDE:
+            self.running = False
+
     def render(self):
         """Render everything to the screen"""
         # Display HUD
@@ -158,8 +192,7 @@ class SopwithGame:
             self.render()
 
             # Control frame rate
-            # self.clock.tick(60)    # Play speed
-            self.clock.tick(180)     # Test speed
+            self.clock.tick(self.FRAME_RATE)    # Play speed
 
         pygame.quit()
 
